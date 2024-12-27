@@ -1,27 +1,46 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
-import Task from "./models/Task";
-import sequelize from "./db";
+import Task from './models/Task.js';
+import sequelize from './db.js';
 
 const app = express();
-const port = process.env.PORT || 7000;
+const port = process.env.PORT || 6001;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // Sync the database with Sequelize
-sequelize
-  .sync()
-  .then(() => {
-    console.log("Database synced successfully!");
-  })
-  .catch((error) => {
-    console.error("Error syncing database:", error);
-  });
+sequelize.sync({ force: true }).then(() => {
+  console.log("Database synced successfully!");
+}).catch((error) => {
+  console.error("Error syncing database:", error);
+});
+
+// POST /tasks - Create a new task
+app.post("/tasks", async (req: Request, res: Response) => {
+  const { title, description, dueDate, priority, status } = req.body;
+
+  try {
+    // Create a new task
+    const newTask = await Task.create({
+      title,
+      description,
+      dueDate,
+      priority,
+      status
+    });
+
+    // Send back the newly created task
+    res.status(201).json(newTask);
+  } catch (error) {
+    console.error("Error creating task:", error);
+    res.status(500).json({ message: "Error creating task" });
+  }
+});
 
 // PUT /tasks/:id - Update a task
-app.put("/tasks/:id", async (req, res) => {
+app.put("/tasks/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, description, dueDate, priority, status } = req.body;
 
@@ -48,7 +67,7 @@ app.put("/tasks/:id", async (req, res) => {
 });
 
 // DELETE /tasks/:id - Delete a task
-app.delete("/tasks/:id", async (req, res) => {
+app.delete("/tasks/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const task = await Task.findByPk(id);

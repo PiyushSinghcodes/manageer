@@ -1,5 +1,5 @@
 import { Model, DataTypes, Optional } from "sequelize";
-import sequelize from "../db";
+import sequelize from "../db.js";
 
 // Define the interface for task attributes
 interface TaskAttributes {
@@ -7,8 +7,8 @@ interface TaskAttributes {
   title: string;
   description: string;
   dueDate: Date;
-  priority: string;
-  status: string;
+  priority: "low" | "medium" | "high";
+  status: "todo" | "completed";
 }
 
 // Define the interface for creating a task (for optional fields like `id`)
@@ -23,44 +23,58 @@ class Task
   public title!: string;
   public description!: string;
   public dueDate!: Date;
-  public priority!: string;
-  public status!: string;
+  public priority!: "low" | "medium" | "high";
+  public status!: "todo" | "completed";
 }
 
 // Initialize the model
 Task.init(
   {
     id: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+      autoIncrement: true, 
       allowNull: false,
       unique: true,
     },
     title: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
+      validate: {
+        notEmpty: true,
+      }
     },
     description: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false,
+      validate: {
+        notEmpty: true,
+      }
     },
     dueDate: {
       type: DataTypes.DATE,
       allowNull: false,
+      validate: {
+        isDate: true,
+      }
     },
     priority: {
       type: DataTypes.ENUM("low", "medium", "high"),
       allowNull: false,
+      defaultValue: "medium",
     },
     status: {
       type: DataTypes.ENUM("todo", "completed"),
       allowNull: false,
+      defaultValue: "todo",
     },
   },
   {
-    sequelize, // the Sequelize instance
+    sequelize,
     tableName: "tasks",
-    timestamps: true, // Optional, whether to use timestamps
+    timestamps: true,
+    paranoid: true, // Enables soft deletes
   }
 );
 

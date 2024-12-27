@@ -17,7 +17,7 @@ const CalendarView = ({ tasks, onTaskClick }) => {
       borderColor = '#dc2626';
     }
     
-    // Adjust opacity based on priority
+    
     const opacity = task.priority === 'high' ? '1' : task.priority === 'medium' ? '0.8' : '0.6';
 
     return {
