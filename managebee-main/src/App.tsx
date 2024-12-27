@@ -7,7 +7,7 @@ import Index from "./pages/Index";
 import axios from 'axios';
 
 // Add API base URL configuration
-axios.defaults.baseURL = 'http://localhost:5001';
+axios.defaults.baseURL = 'http://localhost:6001';
 
 const queryClient = new QueryClient();
 

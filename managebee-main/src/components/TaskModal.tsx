@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Task } from '@/lib/types';
 import {
@@ -18,7 +18,7 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 interface TaskModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (task: Partial<Task>) => void;
+  onSave: (task: Task) => void;  // Expecting the full task to be returned after saving
   task?: Task;
 }
 
@@ -26,17 +26,54 @@ const TaskModal = ({ open, onClose, onSave, task }: TaskModalProps) => {
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
   const [dueDate, setDueDate] = useState<Date>(task?.dueDate ? new Date(task.dueDate) : new Date());
+  const [loading, setLoading] = useState(false);  // Manage loading state for saving
 
-  const handleSave = () => {
-    onSave({
+  // Handle Save button click
+  const handleSave = async () => {
+    setLoading(true);  // Set loading state while making API call
+
+    const taskData = {
       title,
       description,
       dueDate,
       status: task?.status || 'todo',
       column: task?.column || 'TODO',
-    });
-    onClose();
+    };
+
+    // Log the task data being sent to the backend
+    console.log('Saving task data:', taskData);
+
+    try {
+      let response;
+      if (task?.id) {
+        // If task has an ID, it's an update
+        console.log('Updating task with ID:', task.id);  // Debug: Show task ID being updated
+        response = await axios.put(`http://localhost:6001/tasks/${task.id}`, taskData);
+      } else {
+        // If task doesn't have an ID, create a new task
+        console.log('Creating a new task');  // Debug: Show that we're creating a new task
+        response = await axios.post('http://localhost:6001/tasks', taskData);
+      }
+
+      // Log the response from the backend
+      console.log('Response from backend:', response.data);
+
+      onSave(response.data);  // Trigger the onSave callback with the response data
+      onClose();  // Close the modal after saving
+    } catch (error) {
+      console.error('Error saving task:', error);
+    } finally {
+      setLoading(false);  // Set loading state back to false
+    }
   };
+
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title);
+      setDescription(task.description);
+      setDueDate(new Date(task.dueDate));
+    }
+  }, [task]);  // Update form fields when task prop changes
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -85,7 +122,9 @@ const TaskModal = ({ open, onClose, onSave, task }: TaskModalProps) => {
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save</Button>
+          <Button onClick={handleSave} disabled={loading}>
+            {loading ? 'Saving...' : 'Save'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

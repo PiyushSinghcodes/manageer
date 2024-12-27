@@ -2,17 +2,18 @@ import { Task } from '@/lib/types';
 import { getTaskStatus } from '@/lib/taskUtils';
 import { Draggable } from 'react-beautiful-dnd';
 import { format } from 'date-fns';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 interface TaskCardProps {
   task: Task;
   index: number;
   onClick: () => void;
+  onTaskDelete: (taskId: string, columnId: string) => void; // Prop to handle task deletion
 }
 
-const TaskCard = ({ task, index, onClick }: TaskCardProps) => {
+const TaskCard = ({ task, index, onClick, onTaskDelete }: TaskCardProps) => {
   const status = getTaskStatus(task);
-  
+
   const getStatusColor = () => {
     switch (status) {
       case 'completed':
@@ -42,6 +43,15 @@ const TaskCard = ({ task, index, onClick }: TaskCardProps) => {
             <Calendar className="w-4 h-4" />
             <span>{format(new Date(task.dueDate), 'MMM dd, yyyy')}</span>
           </div>
+          <button
+            className="mt-2 text-red-600 text-sm"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering onClick event
+              onTaskDelete(task.id, task.column); // Delete the task
+            }}
+          >
+            Delete
+          </button>
         </div>
       )}
     </Draggable>
